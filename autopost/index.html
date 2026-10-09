@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bumpo Schedule</title>
+<style>
+:root{--bg:#f4f5f8;--card:#fff;--ink:#14161c;--sub:#6b7280;--line:#e5e7eb;--y:#ffd23f;--ok:#16a34a;--bad:#dc2626;--wait:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0d14;--card:#151824;--ink:#f3f4f6;--sub:#9ca3af;--line:#262c3e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.meta{color:var(--sub);font-size:13px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin:28px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;display:flex;gap:14px}
+.card video{width:96px;height:170px;border-radius:10px;background:#000;object-fit:cover;flex:none}
+.body{min-width:0;flex:1}
+.when{font-weight:700;font-size:16px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:#fff;margin-left:6px;vertical-align:2px}
+.scheduled{background:var(--wait)}.posted{background:var(--ok)}.failed,.skipped{background:var(--bad)}
+.cap{white-space:pre-wrap;word-break:break-word;color:var(--ink);margin-top:6px;max-height:4.4em;overflow:hidden;cursor:pointer}
+.cap.open{max-height:none}
+.err{color:var(--bad);font-size:13px;margin-top:6px}
+a{color:var(--wait)}
+.empty{color:var(--sub);padding:12px 0}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>Bumpo schedule</h1><span class="meta" id="meta">Loading…</span></div>
+  <h2>Upcoming</h2><div id="up"></div>
+  <h2>Done</h2><div id="done"></div>
+</main>
+<script>
+const fmt = t => new Date(t).toLocaleString('en-GB',{timeZone:'Europe/Istanbul',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const esc = s => String(s ?? '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vsrc = v => /^https?:/.test(v) ? v : '../' + encodeURIComponent(v);
+function card(p){
+  const link = p.permalink ? ` · <a href="${esc(p.permalink)}" target="_blank" rel="noopener">open on Instagram</a>` : '';
+  return `<div class="card"><video src="${esc(vsrc(p.video))}#t=0.5" preload="metadata" controls playsinline muted></video>
+  <div class="body"><div class="when">${fmt(p.time)}<span class="chip ${esc(p.status)}">${esc(p.status)}</span></div>
+  <div class="meta">${esc(p.id)}${link}</div>
+  <div class="cap" onclick="this.classList.toggle('open')">${esc(p.caption)}</div>
+  ${p.error ? `<div class="err">${esc(p.error)}</div>` : ''}</div></div>`;
+}
+fetch('posts.json?t=' + Date.now()).then(r => r.json()).then(d => {
+  const ps = [...d.posts].sort((a,b) => Date.parse(a.time) - Date.parse(b.time));
+  const up = ps.filter(p => p.status === 'scheduled'), done = ps.filter(p => p.status !== 'scheduled').reverse();
+  document.getElementById('up').innerHTML = up.map(card).join('') || '<div class="empty">Nothing scheduled.</div>';
+  document.getElementById('done').innerHTML = done.map(card).join('') || '<div class="empty">Nothing posted yet.</div>';
+  document.getElementById('meta').textContent = `${up.length} upcoming · Istanbul time`;
+}).catch(() => document.getElementById('meta').textContent = 'Could not load posts.json');
+</script>
+</body>
+</html>
