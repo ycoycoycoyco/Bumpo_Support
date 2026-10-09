@@ -3,14 +3,15 @@
 // Usage: node autopost/post.mjs [run|check]
 import { readFile, writeFile } from 'node:fs/promises';
 
-const API = 'https://graph.facebook.com/v21.0';
+const API = 'https://graph.facebook.com/v23.0';
 const FILE = new URL('./posts.json', import.meta.url);
 const PAGES = 'https://ycoycoycoyco.github.io/Bumpo_Support/';
 const RAW = 'https://raw.githubusercontent.com/ycoycoycoyco/Bumpo_Support/main/';
 const MAX_LATE_H = 24;     // never publish a post more than this many hours late
 const MAX_ATTEMPTS = 3;
 
-const { IG_USER_ID, IG_TOKEN } = process.env;
+const { IG_TOKEN } = process.env;
+let IG_USER_ID = process.env.IG_USER_ID;
 const mode = process.argv[2] || 'run';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -52,10 +53,19 @@ async function publish(p) {
   return { id, permalink, video_url };
 }
 
-if (!IG_USER_ID || !IG_TOKEN) {
+if (!IG_TOKEN) {
   // Not set up yet: stay quiet on the timer, but fail loudly on a manual check.
-  console.log('IG_USER_ID or IG_TOKEN secret is not set yet, nothing to do.');
+  console.log('IG_TOKEN secret is not set yet, nothing to do.');
   process.exit(mode === 'check' ? 1 : 0);
+}
+
+// IG_USER_ID is optional: find the Instagram account linked to the Page the token can see.
+if (!IG_USER_ID) {
+  const { data = [] } = await graph('me/accounts', { fields: 'name,instagram_business_account{id,username}' });
+  const hit = data.find(p => p.instagram_business_account);
+  if (!hit) { console.error('No Instagram account found on the Pages this token can access.'); process.exit(1); }
+  IG_USER_ID = hit.instagram_business_account.id;
+  console.log(`Using Instagram @${hit.instagram_business_account.username} (${IG_USER_ID}) via Page "${hit.name}"`);
 }
 
 if (mode === 'check') {
