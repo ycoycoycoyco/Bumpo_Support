@@ -1,0 +1,47 @@
+name: Instagram autopost
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'run = publish due posts, check = test the connection only'
+        default: 'run'
+        type: choice
+        options: [run, check]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autopost
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: autopost
+          filter: blob:none
+
+      - name: Publish due posts
+        run: node autopost/post.mjs ${{ inputs.mode || 'run' }}
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+
+      - name: Save post status
+        if: always()
+        run: |
+          git config user.name "bumpo-autopost"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add autopost/posts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "autopost: update post status"
+            git pull --rebase
+            git push
+          fi
