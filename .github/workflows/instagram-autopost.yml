@@ -1,5 +1,8 @@
 name: Instagram autopost
 
+# A run stays up for about 5.5 hours, checks posts.json every minute and publishes each post on time,
+# then starts the next run itself. GitHub's own schedule is unreliable (it can be hours late), so the
+# cron below is only a backup that restarts the chain if it ever stops.
 on:
   schedule:
     # off-peak minutes: GitHub delays or drops runs that start at :00 / :15 / :30 / :45
@@ -7,14 +10,16 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'run = publish due posts, check = test the connection only'
-        default: 'run'
+        description: 'wait = publish on time for the next hours, run = publish due posts once, check = test the connection only'
+        default: 'wait'
         type: choice
-        options: [run, check]
+        options: [wait, run, check]
 
 permissions:
   contents: write
+  actions: write
 
+# one run at a time; a new run waits for the current one instead of overlapping it
 concurrency:
   group: autopost
   cancel-in-progress: false
@@ -22,15 +27,20 @@ concurrency:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: autopost
           filter: blob:none
 
-      - name: Publish due posts
-        run: node autopost/post.mjs ${{ inputs.mode || 'run' }}
+      - name: Git identity
+        run: |
+          git config user.name "bumpo-autopost"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish posts on time
+        run: node autopost/post.mjs ${{ inputs.mode || 'wait' }}
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
@@ -38,11 +48,16 @@ jobs:
       - name: Save post status
         if: always()
         run: |
-          git config user.name "bumpo-autopost"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add autopost/posts.json
           if ! git diff --cached --quiet; then
             git commit -m "autopost: update post status"
             git pull --rebase
             git push
           fi
+
+      - name: Start the next run
+        if: ${{ !cancelled() && (inputs.mode || 'wait') == 'wait' }}
+        run: gh workflow run instagram-autopost.yml --ref main -f mode=wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
