@@ -8,6 +8,7 @@ const FILE = new URL('./posts.json', import.meta.url);
 const PAGES = 'https://ycoycoycoyco.github.io/Bumpo_Support/';
 const RAW = 'https://raw.githubusercontent.com/ycoycoycoyco/Bumpo_Support/main/';
 const MAX_LATE_H = 24;     // never publish a post more than this many hours late
+const EARLY_MIN = 10;     // a run up to this many minutes before the slot may publish (scheduled runs are off-peak and often late)
 const MAX_ATTEMPTS = 3;
 
 const { IG_TOKEN } = process.env;
@@ -84,7 +85,7 @@ for (const p of data.posts) {
   if (p.status !== 'scheduled') continue;
   const t = Date.parse(p.time);
   if (isNaN(t)) { p.status = 'failed'; p.error = 'bad time'; changed = true; continue; }
-  if (t > now) continue;
+  if (t - EARLY_MIN * 60e3 > now) continue;
   if (now - t > MAX_LATE_H * 3600e3) { p.status = 'skipped'; p.error = `more than ${MAX_LATE_H}h late`; changed = true; continue; }
   console.log(`Publishing ${p.id} (${p.time})`);
   try {
