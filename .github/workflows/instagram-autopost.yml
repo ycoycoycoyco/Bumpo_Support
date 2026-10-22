@@ -2,7 +2,8 @@ name: Instagram autopost
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # off-peak minutes: GitHub delays or drops runs that start at :00 / :15 / :30 / :45
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
     inputs:
       mode:
