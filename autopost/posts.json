@@ -220,13 +220,6 @@
       "status": "scheduled"
     },
     {
-      "id": "132-bigger-and-bigger",
-      "time": "2026-11-11T09:00:00+03:00",
-      "video": "bumpo_bigger_and_bigger.mp4",
-      "caption": "Same game. Bigger and bigger. 📈 It started on iPhone. Then iPad got its own layout in version 1.2. And now Bumpo is on Mac, with red on WASD and blue on the arrow keys. One game, three screens, no ads. Free on the App Store. Which screen do you play on?\n\n#macgames #macgaming #ipadgames #iphonegames #macbook #macos #2playergames #bumpo",
-      "status": "scheduled"
-    },
-    {
       "id": "66-ad-smasher",
       "time": "2026-11-11T19:00:00+03:00",
       "video": "bumpo_ad_smasher.mp4",
@@ -280,6 +273,13 @@
       "time": "2026-11-17T19:00:00+03:00",
       "video": "bumpo_joystick_buttons.mp4",
       "caption": "Joystick or buttons? 🕹️🎮\nBumpo lets you pick before your first match.\nDrag and the car goes where you point, or steer with classic buttons.\nYou can switch any time in settings.\nWhich team are you? Comment below. 👇\n\n#bumpo #teamjoystick #teambuttons #mobilegames #iphonegames #indiegame #carfootball #gamingcommunity #casualgaming #iosgaming",
+      "status": "scheduled"
+    },
+    {
+      "id": "132-bigger-and-bigger",
+      "time": "2026-11-18T11:00:00+03:00",
+      "video": "bumpo_bigger_and_bigger.mp4",
+      "caption": "Same game. Bigger and bigger. 📈 It started on iPhone. Then iPad got its own layout in version 1.2. And now Bumpo is on Mac, with red on WASD and blue on the arrow keys. One game, three screens, no ads. Free on the App Store. Which screen do you play on?\n\n#macgames #macgaming #macos #macbook #macbookair #macbookpro #imac #macapps #2playergames #bumpo",
       "status": "scheduled"
     },
     {
